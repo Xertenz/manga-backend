@@ -19,7 +19,7 @@ return new class extends Migration
             $table->json('title');
             $table->json('description');
 
-            $table->string('status')->default('ongoing');
+            $table->string('status')->default('ongoing'); // ongoing or completed
             $table->timestamps();
         });
     }
