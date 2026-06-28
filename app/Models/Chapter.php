@@ -20,7 +20,7 @@ class Chapter extends Model implements HasMedia
     }
 
     // هنا نخبر المكتبة بتحويل الصور تلقائياً إلى صيغة WebP الخفيفة وسريعة التحميل
-    public function registerMediaConversions(?Media $media = null): void
+    public function registerMediaConversions(Media $media = null): void
     {
         $this->addMediaConversion('optimized')
             ->format('webp')

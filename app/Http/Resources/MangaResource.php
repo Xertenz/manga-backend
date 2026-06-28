@@ -26,7 +26,7 @@ class MangaResource extends JsonResource
                 'id' => $this->user->id,
                 'name' => $this->user->name
             ],
-            'chapters' => $this->ChapterResource::collection($this->whenLoaded('chapters')),
+            'chapters' => ChapterResource::collection($this->whenLoaded('chapters')),
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

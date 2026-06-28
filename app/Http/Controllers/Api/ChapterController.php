@@ -26,7 +26,7 @@ class ChapterController extends Controller
         $validated = $request->validate([
             'manga_id' => 'required|exists:mangas,id',
             'chapter_number' => 'required|numeric',
-            'title' => 'nullable|numeric',
+            'title' => 'nullable|string',
             'pages' => 'required|array',
             'pages.*' => 'image|mimes:jpeg,png,jpg,webp|max:4096'
         ]);
