@@ -7,6 +7,7 @@ use App\Http\Resources\ChapterResource;
 use App\Models\Chapter;
 use App\Models\Manga;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ChapterController extends Controller
 {
@@ -39,9 +40,25 @@ class ChapterController extends Controller
             'title' => $validated['title'] ?? null,
         ]);
 
+        /*
         if ($request->hasFile('pages')) {
             foreach ($request->file('pages') as $file) {
                 $chapter->addMedia($file)->toMediaCollection('pages');
+            }
+        }
+        */
+
+        if ($request->hasFile('pages')) {
+            $pageNumber = 1;
+            foreach ($request->file('pages') as $file) {
+                $extension = $file->getClientOriginalExtension();
+                $randomHash = Str::random(8);
+                $cleanFileName = 'page-' . $pageNumber . '-' . $randomHash . '.' . $extension;
+                $chapter->addMedia($file)
+                    ->usingName('Page ' . $pageNumber) // الاسم المعروض في قاعدة البيانات (Human-readable)
+                    ->usingFileName($cleanFileName)     // اسم الملف الحقيقي المخزن على القرص الصلب (Sanitized)
+                    ->toMediaCollection('pages');
+                $pageNumber++;
             }
         }
 
@@ -54,10 +71,25 @@ class ChapterController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Chapter $chapter)
     {
-        $chapter = Chapter::findOrFail($id);
-        return new ChapterResource($chapter);
+        //$chapter = Chapter::findOrFail($id);
+        //return new ChapterResource($chapter);
+
+        $chapter->load('media');
+
+        $allChapters = Chapter::where('manga_id', $chapter->manga_id)
+            ->orderBy('chapter_number', 'asc')
+            ->get(['id', 'chapter_number']);
+
+        return (new ChapterResource($chapter))->additional(['all_chapters' => $allChapters]);
+
+        /*
+        return response()->json([
+            'chapter' => $chapter,
+            'all_chapters' => $allChapters
+        ]);
+        */
     }
 
     /**
