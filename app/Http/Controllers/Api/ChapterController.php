@@ -38,6 +38,7 @@ class ChapterController extends Controller
             'manga_id' => $validated['manga_id'],
             'chapter_number' => $validated['chapter_number'],
             'title' => $validated['title'] ?? null,
+            'user_id' => $request->user()->id,
         ]);
 
         /*

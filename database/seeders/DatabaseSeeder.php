@@ -26,26 +26,33 @@ class DatabaseSeeder extends Seeder
         // 2. إنشاء المانغا الأولى (مع دعم اللغات الإنجليزية والعربية في الـ JSON)
         $manga1 = Manga::create([
             'user_id' => $artist->id,
-            'title' => [
-                'en' => 'One Piece',
-                'ar' => 'ون بيس'
-            ],
-            'description' => [
-                'en' => 'Monkey D. Luffy refuses to let anyone or anything stand in the way of his quest to become the king of all pirates.',
-                'ar' => 'مونكي دي لوفي يرفض السماح لأي شخص أو شيء بالوقوف في طريق سعيه ليصبح ملك القراصنة.'
-            ],
             'status' => 'ongoing',
         ]);
+        $manga1->translations()->create([
+            'locale' => 'en',
+            'title' =>  'One Piece',
+            'description' =>  'Monkey D. Luffy refuses to let anyone or anything stand in the way of his quest to become the king of all pirates.',
+            'slug' => 'one-piece'
+        ]);
+        $manga1->translations()->create([
+            'locale' => 'ar',
+            'title' =>  'ون بيس',
+            'description' =>  'مونكي دي لوفي يرفض السماح لأي شخص أو شيء بالوقوف في طريق سعيه ليصبح ملك القراصنة.',
+            'slug' => 'ون-بيس'
+        ]);
 
+        /*
         // إضافة فصول تجريبية للمانغا الأولى
         Chapter::create([
             'manga_id' => $manga1->id,
+            'user_id' => $artist->id,
             'chapter_number' => 1.0,
             'title' => 'Romance Dawn',
         ]);
 
         Chapter::create([
             'manga_id' => $manga1->id,
+            'user_id' => $artist->id,
             'chapter_number' => 2.0,
             'title' => 'They Call Him Luffy',
         ]);
@@ -62,12 +69,15 @@ class DatabaseSeeder extends Seeder
                 'ar' => 'ناروتو أوزوماكي، نينجا مراهق ومشاغب، يكافح ويبحث عن الاعتراف به ويحلم بأن يصبح الهوكاجي.'
             ],
             'status' => 'completed',
+            'slug' => 'naruto'
         ]);
 
         Chapter::create([
             'manga_id' => $manga2->id,
+            'user_id' => $artist->id,
             'chapter_number' => 1.0,
             'title' => 'Uzamaki Naruto!!',
         ]);
+        */
     }
 }

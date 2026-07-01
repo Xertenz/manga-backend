@@ -24,5 +24,6 @@ Route::get('/chapters/{chapter}', [ChapterController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/mangas', [MangaController::class, 'store']);
     Route::post('/chapters', [ChapterController::class, 'store']);
 });

@@ -14,18 +14,28 @@ class MangaResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // قراءة اللغة المرسلة من React عبر الـ Header (مثلاً ar أو en)
-        // إذا لم ترسل React لغة، سنعتمد العربية كافتراضية
-        $lang = $request->header('Accept-Language', 'en');
+
+        $titles = [];
+        $descriptions = [];
+
+        foreach ($this->translations as $translation) {
+            $titles[$translation->locale] = $translation->title;
+            $descriptions[$translation->locale] = $translation->description;
+        }
+
         return [
             'id' => $this->id,
-            'title' => $this->title[$lang] ?? $this->title['en'],
-            'description' => $this->description[$lang] ?? $this->description['en'],
+            'title' => $titles,
+            'description' => $descriptions,
             'status' => $this->status,
-            'artist' => [
-                'id' => $this->user->id,
-                'name' => $this->user->name
-            ],
+            'slug' => $this->slug,
+
+            'cover_url' => $this->hasMedia('cover') ? $this->getFirstMediaUrl('cover', 'thumb') : null,
+
+            'artist' => $this->artist ? [
+                'id' => $this->artist->id,
+                'name' => $this->artist->name
+            ] : null,
             'chapters' => ChapterResource::collection($this->whenLoaded('chapters')),
             'created_at' => $this->created_at->toIso8601String(),
         ];

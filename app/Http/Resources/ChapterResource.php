@@ -19,6 +19,11 @@ class ChapterResource extends JsonResource
             'chapter_number' => $this->chapter_number,
             'title' => $this->title,
 
+            'uploader' => $this->uploader ? [
+                'id' => $this->uploader->id,
+                'name' => $this->uploader->name,
+            ] : null,
+
             'pages' => $this->getMedia('pages')->map(function ($media) {
                 return [
                     'id' => $media->id,

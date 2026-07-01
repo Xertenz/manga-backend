@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MangaResource;
 use App\Models\Manga;
+use App\Models\MangaTranslation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class MangaController extends Controller
 {
@@ -14,7 +17,7 @@ class MangaController extends Controller
      */
     public function index()
     {
-        $mangas = Manga::with('user')->latest()->paginate(12);
+        $mangas = Manga::with(['artist', 'translations', 'tags.translations'])->latest()->paginate(12);
         return MangaResource::collection($mangas);
     }
 
@@ -24,24 +27,42 @@ class MangaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|array',
-            'title.en' => 'required|array',
-            'title.ar' => 'required|array',
-            'description' => 'required|array',
-            'description.en' => 'required|array',
-            'description.ar' => 'required|array',
-            'status' => 'required|string|in:ongoing|completed'
-        ]);
-        $manga = Manga::create([
-            'user_id' => 1,
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'status' => $validated['status']
+            'status'         => 'required|string|in:ongoing,completed,hiatus',
+
+            'lang'           => 'required|in:en,ar',
+            'title'          => 'required|string|max:255',
+            'description'    => 'nullable|string|max:1000',
+
+            'cover'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
+        $slug = Str::slug($validated['title']) ?: 'manga-' . Str::random(8);
+
+        $manga = DB::transaction(function () use ($request, $validated, $slug) {
+            $manga = Manga::create([
+                'user_id' => $request->user()->id,
+                'status'  => $validated['status'],
+            ]);
+
+            $manga->translations()->create([
+                'locale'      => $validated['lang'],
+                'title'       => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'slug'        => $slug,
+            ]);
+
+            return $manga;
+        });
+
+        if ($request->hasFile('cover')) {
+            $manga->addMediaFromRequest('cover')
+                ->usingFileName('cover-' . Str::random(8) . '.' . $request->file('cover')->getClientOriginalExtension())
+                ->toMediaCollection('cover');
+        }
+
         return response()->json([
-            'message' => 'manga created successfully',
-            'data' => new MangaResource($manga),
+            'message' => 'Manga created successfully',
+            'data'    => new MangaResource($manga->load('translations')),
         ], 201);
     }
 
@@ -50,7 +71,7 @@ class MangaController extends Controller
      */
     public function show(string $id)
     {
-        $manga = Manga::with(['user', 'chapters'])->findOrFail($id);
+        $manga = Manga::with(['artist', 'chapters'])->findOrFail($id);
         return new MangaResource($manga);
     }
 
