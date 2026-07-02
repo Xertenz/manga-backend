@@ -17,13 +17,7 @@ class Manga extends Model implements HasMedia
 
     protected $fillable = ['user_id', 'status'];
 
-    // ليفهم لارافيل أن هذه الحقول تخزن كـ JSON وتدعم تعدد اللغات
-    protected $casts = [
-        'title' => 'array',
-        'description' => 'array'
-    ];
-
-    public function artist(): BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

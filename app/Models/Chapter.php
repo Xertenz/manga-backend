@@ -21,14 +21,9 @@ class Chapter extends Model implements HasMedia
         return $this->belongsTo(Manga::class, 'manga_id');
     }
 
-    public function uploader(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
     public function translations(): HasMany
     {
-        return $this->hasMany(TagTranslation::class, 'tag_id');
+        return $this->hasMany(ChapterTranslation::class, 'chapter_id');
     }
 
     public function translation(?string $locale = null)

@@ -14,14 +14,18 @@ class ChapterResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $titles = [];
+        foreach ($this->translations as $translation) {
+            $titles[$translation->locale] = $translation->title ? $translation->title : null;
+        }
         return [
             'id' => $this->id,
             'chapter_number' => $this->chapter_number,
-            'title' => $this->title,
+            'title' => $titles,
 
-            'uploader' => $this->uploader ? [
-                'id' => $this->uploader->id,
-                'name' => $this->uploader->name,
+            'uploader' => $this->manga && $this->manga->user ? [
+                'id' => $this->manga->user->id,
+                'name' => $this->manga->user->name,
             ] : null,
 
             'pages' => $this->getMedia('pages')->map(function ($media) {

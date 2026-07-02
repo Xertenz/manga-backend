@@ -7,6 +7,7 @@ use App\Http\Resources\ChapterResource;
 use App\Models\Chapter;
 use App\Models\Manga;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ChapterController extends Controller
@@ -26,20 +27,54 @@ class ChapterController extends Controller
     {
         $validated = $request->validate([
             'manga_id' => 'required|exists:mangas,id',
-            'chapter_number' => 'required|numeric',
+            'chapter_number' => 'required|numeric|min:0',
+
+            'lang'  => 'required|in:en,ar',
             'title' => 'nullable|string',
-            'pages' => 'required|array',
+
+            'pages' => 'required|array|min:1',
             'pages.*' => 'image|mimes:jpeg,png,jpg,webp|max:4096'
         ]);
-        // مؤقتاً: التأكد من أن المانغا تخص الرسام الحالي (سنقوم بتحسينها عند إضافة نظام الحماية)
-        $manga = Manga::findOrFail($validated['manga_id']);
 
-        $chapter = Chapter::create([
-            'manga_id' => $validated['manga_id'],
-            'chapter_number' => $validated['chapter_number'],
-            'title' => $validated['title'] ?? null,
-            'user_id' => $request->user()->id,
-        ]);
+        // التحقق من أن الفنان الحالي هو صاحب المانغا (حماية أمنية 🔒)
+        $manga = Manga::findOrFail($validated['manga_id']);
+        if ($manga->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized. You do not own this manga.'], 403);
+        }
+
+        $slug = 'ch-' . $validated['chapter_number'];
+
+        $chapter = DB::transaction(function () use ($validated, $slug) {
+            $chapter = Chapter::create([
+                'manga_id' => $validated['manga_id'],
+                'chapter_number' => $validated['chapter_number'],
+            ]);
+
+            $chapter->translations()->create([
+                'locale' => $validated['lang'],
+                'title' => $validated['title'] ?? null,
+                'slug' => $slug,
+            ]);
+
+            return $chapter;
+        });
+
+        if ($request->hasFile('pages')) {
+            foreach ($request->file('pages') as $index => $pageFile) {
+                // تسمية الصور بناءً على ترتيبها (page-001, page-002...) لضمان الترتيب الأبجدي عند الجلب
+                $pageName = 'page-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT);
+
+                $chapter->addMedia($pageFile)
+                    ->usingFileName($pageName . '.' . $pageFile->getClientOriginalExtension())
+                    ->toMediaCollection('pages');
+            }
+        }
+
+        return response()->json([
+            'message' => 'Chapter published successfully with ' . count($validated['pages']) . ' pages!',
+            'data' => new ChapterResource($chapter->load(['translations', 'manga.user']))
+        ], 201);
+
 
         /*
         if ($request->hasFile('pages')) {

@@ -42,9 +42,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Manga::class, 'user_id');
     }
-
-    public function chapters(): HasMany
-    {
-        return $this->hasMany(Chapter::class, 'user_id');
-    }
 }

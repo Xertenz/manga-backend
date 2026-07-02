@@ -22,6 +22,8 @@ Route::get('mangas/{manga}', [MangaController::class, 'show']);
 Route::get('/chapters', [ChapterController::class, 'index']);
 Route::get('/chapters/{chapter}', [ChapterController::class, 'show']);
 
+Route::get('/tags', [MangaController::class, 'getAvailableTags']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/mangas', [MangaController::class, 'store']);
